@@ -39,7 +39,7 @@ averageHammingPerLineRestrict :: [String] -> [String] -> [Double]
 --         let diff = hamming x y
 --             total = max (length x) (length y)
 --         in fromIntegral diff / fromIntegral total)
---     a b
+--     a b 
 averageHammingPerLineRestrict =
     zipWith (\x y -> 
         let diff = hamming x y
