@@ -1,8 +1,12 @@
 ## Variant: hamming distance with penality
 
-![image](https://github.com/user-attachments/assets/82022094-2034-4eda-a93a-d17d4e152f9a)
+![image](https://github.com/user-attachments/assets/a5c30e35-d8a4-40cb-ab07-fc60fcdcb9c4)
 
-![image](https://github.com/user-attachments/assets/8241cc51-52cb-4221-8287-7e0ec2b0597c)
+![image](https://github.com/user-attachments/assets/64abbd25-d21d-4da1-b22e-047129b49440)
+
+
+
+
 
 
 
