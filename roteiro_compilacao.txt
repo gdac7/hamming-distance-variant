@@ -1,0 +1,8 @@
+ghc ./Main.hs
+./Main
+
+ou, com Makefile:
+
+make build
+./main.exe
+
