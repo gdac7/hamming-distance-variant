@@ -1,7 +1,7 @@
-import GetDiffLines (editDistancePerLine, averageEditDistancePerLine, hammingDistancePerLine, averageHammingPerLine)
+import GetDiffLines (editDistancePerLine, averageEditDistancePerLine, hammingDistancePerLine, averageHammingPerLine, getMissingLines)
 import FileHandler (writeResult, readFiles)
 import System.IO
-import System.Environment
+import System.Environment ()
 import Text.Printf (printf)
 
 
@@ -12,6 +12,14 @@ roundTo2 average  = fromIntegral (round (average * 100)) / 100
 
 main :: IO()
 main = loop
+
+missingInfo :: Int -> Int -> String -> String -> String
+missingInfo fileMissing missingLines file1 file2
+    | fileMissing == 1 = "Arquivo '" ++ file2 ++ "' está faltando " ++ show missingLines  ++ " linhas" 
+    | fileMissing == 0 = "Arquivo '" ++ file1 ++ "' está faltando " ++ show missingLines ++ " linhas"
+    | otherwise = "Os arquivos tem o mesmo número de linhas"
+
+
 
 
 
@@ -28,10 +36,14 @@ diff algoritmo file1 file2 output = do
             | algoritmo == 'h' = (hammingDistancePerLine lines1 lines2, averageHammingPerLine lines1 lines2)
             | algoritmo == 'e' = (editDistancePerLine lines1 lines2, averageEditDistancePerLine lines1 lines2)
             | otherwise        = error "Erro: Algoritmo invalido" 
-    
+    let (missingLines, fileMissing) = getMissingLines lines1 lines2
     --let finalResultLine = zip dist (map roundTo2 averagePerLine)
     -- Usar show na linha abaixo causa exibição de números em notação científica
-    let result = unlines [ "Diff = " ++ show d ++ ", Media = " ++  printf "%.2f" avg | (d, avg) <- zip dist (map roundTo2 averagePerLine) ]
+    let linesInfo = missingInfo fileMissing missingLines file1 file2
+            
+
+    let result = unlines [ "Diff = " ++ show d ++ ", Media = " ++  printf "%.2f" avg | (d, avg) <- zip dist (map roundTo2 averagePerLine)] ++ "\n" ++ linesInfo
+
 
     if null output
         then putStrLn result

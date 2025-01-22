@@ -2,8 +2,7 @@ module FileHandler where
 
 import System.IO
 
--- Readfiles receive two String (FilePath is just an alias for String), performs some IO operation (Indacated by IO ) and returns an obj
--- a, where in this case a ins ([String], [String])
+
 readFiles :: FilePath -> FilePath -> IO ([String], [String])    
 readFiles file1 file2 = do
     content1 <- readFile file1
