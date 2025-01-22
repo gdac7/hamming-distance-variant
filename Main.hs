@@ -2,7 +2,7 @@ import GetDiffLines (editDistancePerLine, averageEditDistancePerLine, hammingDis
 import FileHandler (writeResult, readFiles)
 import System.IO
 import System.FilePath
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, createDirectoryIfMissing)
 import System.Environment ()
 import Text.Printf (printf)
 
@@ -62,6 +62,7 @@ writeCachedNewFile cachedPath newContent = writeFile cachedPath(unlines newConte
 
 writeCachedFileFirstTime :: FilePath -> FilePath -> IO()   
 writeCachedFileFirstTime fileStart cachedPath = do
+    createDirectoryIfMissing True (takeDirectory cachedPath)
     fileExists <- doesFileExist cachedPath
     if not fileExists 
         then do
@@ -78,12 +79,12 @@ loop = do
     putStr "\nDigite o caminho do primeiro arquivo: "
     hFlush stdout
     f1 <- getLine
-    let cachedPathF1 = "cached_files/" ++ takeFileName f1
+    let cachedPathF1 = "cached-files/" ++ takeFileName f1
     writeCachedFileFirstTime f1 cachedPathF1 
     putStr "Digite o caminho do segundo arquivo: "
     hFlush stdout
     f2 <- getLine
-    let cachedPathF2 = "cached_files/" ++ takeFileName f2
+    let cachedPathF2 = "cached-files/" ++ takeFileName f2
     writeCachedFileFirstTime f2 cachedPathF2 
 
     putStr "Digite o algoritmo que deseja utilizar: hamming(h) ou edicao(e): "
