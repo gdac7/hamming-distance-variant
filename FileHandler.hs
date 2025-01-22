@@ -14,6 +14,8 @@ writeResult results outputFile = writeFile outputFile(unlines results)
 
 content = readFiles "teste/a.txt" "teste/b.txt"
 
+
+
 {-
 >>= bind operator
 >>= exige uma função como segundo argumento

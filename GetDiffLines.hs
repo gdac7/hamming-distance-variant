@@ -1,5 +1,5 @@
 module GetDiffLines where 
-
+import Data.List ((\\))
 import Data.Array
 
 
@@ -7,6 +7,9 @@ roundTo2 :: Double -> Double
 roundTo2 average  = fromIntegral (round (average * 100)) / 100    
 
 
+
+-- Não desenvolvi esse algoritmo (quem dera). Peguei a base em https://wiki.haskell.org/Edit_distance. 
+-- Não consegui fazer o meu hamming distance dar como resultado 1 em "ahello" vs "hello", etc...
 editDistance :: String -> String -> Int
 editDistance xs ys = table ! (m, n)
   where
@@ -64,31 +67,37 @@ averageHammingPerLine =
 
 
 
+getChanges :: [String] -> [String] -> [(String, String)]
+getChanges cachedFile currentFile = [(x, y) | (x, y) <- zip cachedFile currentFile, x /= y]
 
-
-getMissingLines :: [String] -> [String] ->(Int, Int)
-getMissingLines a b
-        | lengthA > lengthB = (lengthA - lengthB, 1)
-        | lengthA < lengthB = (lengthB - lengthA, 0)
-        | otherwise = (0, -1)
-        where
-            lengthA = length a
-            lengthB = length b
+-- Apenas para formatar o resultado de getChanges
+formatChanges :: [(String, String)] -> String
+formatChanges changes = unlines [ "(-" ++ x ++ ", +" ++ y ++ ")" | (x, y) <- changes ]
 
 
 
 
+diffLines :: [String] -> [String] -> ([String], [String])
+diffLines a b = 
+    let removed = a \\ b 
+        inserted = b \\ a 
+    in (removed, inserted)
 
 
+constructOutput :: String -> [String] -> String -> [String]
+constructOutput file linesDiff prefix = 
+    let header = file
+        body = map (\line -> prefix ++ " " ++ line) linesDiff
+    in if null linesDiff then [] else header : body
 
 
--- hammingRecursive :: String -> String -> Int
--- hammingRecursive [] [] = 0
--- hammingRecursive [] b = length b
--- hammingRecursive a [] = length a
--- hammingRecursive (x:xs) (y:ys)
---     | x == y    = hammingRecursive xs ys
---     | otherwise = 1 + hammingRecursive xs ys
+processDiff :: FilePath -> [String] -> [String] -> [String]
+processDiff fileName a b =
+    let (removed, inserted) = diffLines a b
+        removedOutput = constructOutput fileName removed "--"
+        insertedOutput = constructOutput fileName inserted "++"
+    in removedOutput ++ insertedOutput
+
 
 
 

@@ -1,8 +1,11 @@
-import GetDiffLines (editDistancePerLine, averageEditDistancePerLine, hammingDistancePerLine, averageHammingPerLine, getMissingLines)
+import GetDiffLines (editDistancePerLine, averageEditDistancePerLine, hammingDistancePerLine, averageHammingPerLine, getChanges, formatChanges, processDiff)
 import FileHandler (writeResult, readFiles)
 import System.IO
+import System.FilePath
+import System.Directory (doesFileExist)
 import System.Environment ()
 import Text.Printf (printf)
+
 
 
 -- Não está sendo usada. printf resolve o problema!!
@@ -24,77 +27,90 @@ missingInfo fileMissing missingLines file1 file2
 
 
 
--- diff :: FilePath -> FilePath -> Bool -> Maybe FilePath -> IO ()
 
-diff :: Char -> FilePath -> FilePath -> FilePath -> IO ()
-diff algoritmo file1 file2 output = do
-    content1 <- readFile file1
-    content2 <- readFile file2
-    let lines1 = lines content1
-    let lines2 = lines content2
+
+diff :: Char -> FilePath -> FilePath -> FilePath -> FilePath -> FilePath -> IO ()
+diff algoritmo startFile1 file1 startFile2 file2 output = do
+    contentStartFile1 <- readFile startFile1
+    contentCurrentFile1 <- readFile file1
+    contentStartFile2 <- readFile startFile2
+    contentCurrentFile2 <- readFile file2
+
+    let startLines1 = lines contentStartFile1
+    let startLines2 = lines contentStartFile2
+
+    let currentLines1 = lines contentCurrentFile1
+    let currentLines2 = lines contentCurrentFile2
+
     let (dist, averagePerLine)
-            | algoritmo == 'h' = (hammingDistancePerLine lines1 lines2, averageHammingPerLine lines1 lines2)
-            | algoritmo == 'e' = (editDistancePerLine lines1 lines2, averageEditDistancePerLine lines1 lines2)
+            | algoritmo == 'h' = (hammingDistancePerLine currentLines1 currentLines2, averageHammingPerLine currentLines1 currentLines2)
+            | algoritmo == 'e' = (editDistancePerLine currentLines1 currentLines2, averageEditDistancePerLine currentLines1 currentLines2)
             | otherwise        = error "Erro: Algoritmo invalido" 
-    let (missingLines, fileMissing) = getMissingLines lines1 lines2
-    --let finalResultLine = zip dist (map roundTo2 averagePerLine)
-    -- Usar show na linha abaixo causa exibição de números em notação científica
-    let linesInfo = missingInfo fileMissing missingLines file1 file2
-            
+    
+    
+    let linesInfoFile1 = processDiff file1  startLines1 currentLines1
+    let linesInfoFile2 = processDiff file2  startLines2 currentLines2
+    let changesFile1 = formatChanges(getChanges startLines1 currentLines1)
+    let changesFile2 = formatChanges(getChanges startLines2 currentLines2)
 
-    let result = unlines [ "Diff = " ++ show d ++ ", Media = " ++  printf "%.2f" avg | (d, avg) <- zip dist (map roundTo2 averagePerLine)] ++ "\n" ++ linesInfo
-
-
+    let result = unlines [ "Diff = " ++ show d ++ ", Media = " ++  printf "%.2f" avg | (d, avg) <- zip dist (map roundTo2 averagePerLine)] ++ "\n" 
+                        ++ unlines linesInfoFile1 ++ changesFile1 ++   unlines linesInfoFile2  ++ changesFile2
     if null output
         then putStrLn result
         else do
             writeFile output result
 
+    writeCachedNewFile startFile1 currentLines1
+    writeCachedNewFile startFile2 currentLines2
 
 
-            
+
+writeCachedNewFile :: FilePath -> [String] -> IO()
+writeCachedNewFile cachedPath newContent = writeFile cachedPath(unlines newContent)
+
+
+
+writeCachedFileFirstTime :: FilePath -> FilePath -> IO()   
+writeCachedFileFirstTime fileStart cachedPath = do
+    fileExists <- doesFileExist cachedPath
+    if not fileExists 
+        then do
+            content <- readFile fileStart
+            let lines1 = lines content
+            writeFile cachedPath (unlines lines1)
+    else return()
+
+
 
 loop :: IO()
 loop = do
+    -- Lê os arquivos e salva suas versões iniciais para poder comparar inserção e remoção de linhas
     putStr "\nDigite o caminho do primeiro arquivo: "
     hFlush stdout
     f1 <- getLine
+    let cachedPathF1 = "cached_files/" ++ takeFileName f1
+    writeCachedFileFirstTime f1 cachedPathF1 
     putStr "Digite o caminho do segundo arquivo: "
     hFlush stdout
     f2 <- getLine
+    let cachedPathF2 = "cached_files/" ++ takeFileName f2
+    writeCachedFileFirstTime f2 cachedPathF2 
+
     putStr "Digite o algoritmo que deseja utilizar: hamming(h) ou edicao(e): "
     hFlush stdout
     algoritmo <- getLine
-    {--A linha abaixo transforma 'algoritmo' para char. Bom para poupar memoria
-        Poderia também ser feito com: 
-        alg <- case algoritmo of
-            [c] -> return c 
-            [] -> error "Nenhum algoritmo especificado"
-            _ -> error "Algoritmo invalido! Digite apenas 'h' ou 'e'"
-    --}
     let alg = if null algoritmo then error "Nenhum algoritmo especificado" else head algoritmo
     putStr "Digite o caminho para o arquivo de output (deixe vazio para mostrar na tela): "
     hFlush stdout
     output <- getLine
-    processaEntradas f1 f2 alg output
-    putStr "Deseja calcular novamente? (s/n)"
+    processaEntradas cachedPathF1 f1 cachedPathF2 f2 output alg 
+    putStr "Deseja calcular novamente (s/n)? "
     hFlush stdout
     op <- getLine
     if op == "s"
         then loop
         else putStrLn "Encerrado."
 
-processaEntradas :: String -> String -> Char -> String -> IO ()
-processaEntradas arquivo1 arquivo2 algoritmo output = diff algoritmo arquivo1 arquivo2 output
-
-    
--- loop :: IO()
--- loop = do
---     input <- getLine
---     if input == "sair"
---         then putStrLn "Encerrando..."
---         else do
---             putStrLn ("Oi")
---             loop
-    
+processaEntradas :: FilePath -> FilePath -> FilePath -> FilePath -> FilePath -> Char -> IO()
+processaEntradas startFile1 file1 startFile2 file2 output algoritmo =  diff algoritmo startFile1 file1 startFile2 file2 output
 
