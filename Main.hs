@@ -16,16 +16,6 @@ roundTo2 average  = fromIntegral (round (average * 100)) / 100
 main :: IO()
 main = loop
 
-missingInfo :: Int -> Int -> String -> String -> String
-missingInfo fileMissing missingLines file1 file2
-    | fileMissing == 1 = "Arquivo '" ++ file2 ++ "' está faltando " ++ show missingLines  ++ " linhas" 
-    | fileMissing == 0 = "Arquivo '" ++ file1 ++ "' está faltando " ++ show missingLines ++ " linhas"
-    | otherwise = "Os arquivos tem o mesmo número de linhas"
-
-
-
-
-
 
 
 
